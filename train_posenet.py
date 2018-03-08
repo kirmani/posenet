@@ -239,7 +239,7 @@ def main(args):
     sess = tf.Session()
 
     # Create a saver object for saving and loading variables.
-    saver = tf.train.Saver(max_to_keep=20)
+    saver = tf.train.Saver(max_to_keep=2)
 
     # Set up training
     sess.run(tf.global_variables_initializer())
