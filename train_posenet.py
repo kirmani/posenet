@@ -105,12 +105,11 @@ def main(args):
     rotation_label = label[:, 3:]
 
     # Whiten the input.
-    # TODO(kirmani): Properly whiten the inputs.
     inputs = tf.identity(image, name='inputs')
-    white_inputs = (inputs - 100.) / 72.
+    tf.map_fn(lambda inputs: tf.image.per_image_standardization(inputs), inputs)
 
     with tf.name_scope('model'), tf.variable_scope('model'):
-        h = white_inputs
+        h = inputs
         h = tf.contrib.layers.conv2d(
             h,
             num_outputs, [7, 7],
