@@ -18,6 +18,7 @@ import util
 
 CROP_SIZE = 224
 
+
 def Parser(record):
     # Parse the TF record
     parsed = tf.parse_single_example(
@@ -32,7 +33,8 @@ def Parser(record):
     # Load the data and format it
     H = tf.cast(parsed['train/height'], tf.int32)
     W = tf.cast(parsed['train/width'], tf.int32)
-    image = tf.reshape(tf.decode_raw(parsed["train/image"], tf.uint8), [H, W, 3])
+    image = tf.reshape(
+        tf.decode_raw(parsed["train/image"], tf.uint8), [H, W, 3])
     position = tf.reshape(parsed["train/position"], [3])
     rotation = tf.reshape(parsed["train/rotation"], [4])
 
@@ -56,6 +58,7 @@ def LoadDataset(tfrecord):
     dataset = dataset.batch(64)
     dataset = dataset.repeat()
     return dataset
+
 
 def main(args):
     """ Main function. """
@@ -109,12 +112,12 @@ def main(args):
 
     with tf.name_scope('model'), tf.variable_scope('model'):
         h = white_inputs
-        h = tf.contrib.layers.conv2d(h,
-                num_outputs,
-                [7, 7],
-                stride=(2, 2),
-                weights_regularizer=tf.nn.l2_loss,
-                activation_fn=None)
+        h = tf.contrib.layers.conv2d(
+            h,
+            num_outputs, [7, 7],
+            stride=(2, 2),
+            weights_regularizer=tf.nn.l2_loss,
+            activation_fn=None)
         h = tf.contrib.layers.batch_norm(h)
         h = tf.nn.relu(h)
 
@@ -213,10 +216,14 @@ def main(args):
     # Let's define some summaries for tensorboard
     tf.summary.image('image', next_image, max_outputs=3)
     tf.summary.scalar('loss', tf.placeholder(tf.float32, name='loss'))
-    tf.summary.scalar('position_loss', tf.placeholder(tf.float32, name='position_loss'))
-    tf.summary.scalar('rotation_loss', tf.placeholder(tf.float32, name='rotation_loss'))
-    tf.summary.scalar('position_error', tf.placeholder(tf.float32, name='position_error'))
-    tf.summary.scalar('rotation_error', tf.placeholder(tf.float32, name='rotation_error'))
+    tf.summary.scalar('position_loss',
+                      tf.placeholder(tf.float32, name='position_loss'))
+    tf.summary.scalar('rotation_loss',
+                      tf.placeholder(tf.float32, name='rotation_loss'))
+    tf.summary.scalar('position_error',
+                      tf.placeholder(tf.float32, name='position_error'))
+    tf.summary.scalar('rotation_error',
+                      tf.placeholder(tf.float32, name='rotation_error'))
 
     merged_summary = tf.summary.merge_all()
     summary_writer = tf.summary.FileWriter(LOG_DIR, tf.get_default_graph())
@@ -246,10 +253,11 @@ def main(args):
         rotation_error_vals = []
         # Run 10 training iterations and 1 validation iteration
         for i in range(10):
-            (loss_val, position_loss_val, rotation_loss_val,
-             position_error_val, rotation_error_val, _) = sess.run([loss,
-             position_loss, rotation_loss, position_error,
-             rotation_error, opt])
+            (loss_val, position_loss_val, rotation_loss_val, position_error_val,
+             rotation_error_val, _) = sess.run([
+                 loss, position_loss, rotation_loss, position_error,
+                 rotation_error, opt
+             ])
             loss_vals.append(loss_val)
             position_loss_vals.append(position_loss_val)
             rotation_loss_vals.append(rotation_loss_val)
@@ -261,16 +269,15 @@ def main(args):
 
         # Let's update tensorboard
         summary_writer.add_summary(
-            sess.run(merged_summary, {
-                'loss:0': np.mean(loss_vals),
-                'position_loss:0': np.mean(position_loss_vals),
-                'rotation_loss:0': np.mean(rotation_loss_vals),
-                'position_error:0': np.mean(position_error_vals),
-                'rotation_error:0': np.mean(rotation_error_vals),
-            }), it)
-        print(
-            '[%3d] Loss: %0.3f'
-            % (it, np.mean(loss_vals)))
+            sess.run(
+                merged_summary, {
+                    'loss:0': np.mean(loss_vals),
+                    'position_loss:0': np.mean(position_loss_vals),
+                    'rotation_loss:0': np.mean(rotation_loss_vals),
+                    'position_error:0': np.mean(position_error_vals),
+                    'rotation_error:0': np.mean(rotation_error_vals),
+                }), it)
+        print('[%3d] Loss: %0.3f' % (it, np.mean(loss_vals)))
 
     #######################
     # Part 3: Evaluation. #
