@@ -187,6 +187,9 @@ def main(args):
         # Normalize the quaternion to unit length.
         rotation = rotation / tf.norm(rotation)
 
+    position = tf.identity(position, name='position')
+    rotation = tf.identity(rotation, name='rotation')
+
     # Define the loss function
     position_loss = tf.nn.l2_loss(position_label - position)
     rotation_loss = tf.nn.l2_loss(rotation_label - rotation)

@@ -63,8 +63,8 @@ def main(args):
                 pose.rotation.w
             ]
 
-            # scale = 256.0 / min(msg.height, msg.width)
-            scale = 1.0
+            scale = 256.0 / min(msg.height, msg.width)
+            # scale = 1.0
             height = int(msg.height * scale)
             width = int(msg.width * scale)
             img = scipy.misc.imresize(
