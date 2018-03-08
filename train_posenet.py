@@ -16,13 +16,7 @@ import tensorflow as tf
 import time
 import util
 
-# Colors to visualize the labeling
-COLORS = np.array(
-    [(0, 0, 0), (255, 0, 0), (0, 255, 0), (255, 255, 0), (0, 0, 255), (255, 255,
-                                                                       255)],
-    dtype=np.uint8)
 CROP_SIZE = 224
-
 
 def Parser(record):
     # Parse the TF record
@@ -63,38 +57,18 @@ def LoadDataset(tfrecord):
     dataset = dataset.repeat()
     return dataset
 
-
-def Accuracy(confusion):
-    # Overall pixelwise accuracy
-    # This metric heavily favors tiles and background (as they are most frequent)
-    return np.sum(np.diag(confusion)) / np.sum(confusion)
-
-
-def ClassAccuracy(confusion):
-    # Class wise accuracy
-    # This metric normalizes for class frequencies and favors small classes
-    return np.mean(np.diag(confusion) / (np.sum(confusion, axis=1) + 1e-10))
-
-
-def Jaccard(confusion):
-    # Jaccard index
-    # A mix of the above, neither favors small or large classes much
-    D = np.diag(confusion)
-    return np.mean(
-        D / (np.sum(confusion, axis=1) + np.sum(confusion, axis=0) - D + 1e-10))
-
-
 def main(args):
     """ Main function. """
     ##################
     # Part 0: Setup. #
     ##################
     beta = 250.0
+    num_outputs = 16
 
     ################################
     # Part 1: Define your ConvNet. #
     ################################
-    # Create a new log directory (if you run low on disk space you can either disable this or delete old logs)
+    # Create a new log directory
     # run: `tensorboard --logdir log` to see all the nice summaries
     for n_model in range(1000):
         LOG_DIR = 'log/model_%d' % n_model
@@ -102,27 +76,27 @@ def main(args):
         if not path.exists(LOG_DIR):
             break
 
-    # Lets clear the tensorflow graph, so that you don't have to restart the notebook every time you change the network
+    # Lets clear the tensorflow graph, so that you don't have to restart the
+    # notebook every time you change the network
     tf.reset_default_graph()
-
-    TF_COLORS = tf.constant(COLORS)
 
     train_data = LoadDataset('final_run.tfrecords')
     valid_data = LoadDataset('final_run.tfrecords')
 
-    # Create an iterator for the datasets
-    # The iterator allows us to quickly switch between training and validataion
+    # Create an iterator for the datasets.
+    # The iterator allows us to quickly switch between training and validation.
     iterator = tf.contrib.data.Iterator.from_structure(
         train_data.output_types, ((None, 224, 224, 3), (None, 7)))
 
-    # and fetch the next images from the dataset (every time next_image is evaluated a new image set of 32 images is returned)
+    # And fetch the next images from the dataset (every time next_image is
+    # evaluated a new image set of 64 images is returned).
     next_image, next_label = iterator.get_next()
 
-    # Define operations that switch between train and valid
+    # Define operations that switch between train and valid.
     switch_train_op = iterator.make_initializer(train_data)
     switch_valid_op = iterator.make_initializer(valid_data)
 
-    # Convert the input
+    # Convert the input.
     image = tf.cast(next_image, tf.float32)
     label = tf.cast(next_label, tf.float32)
     position_label = label[:, :3]
@@ -135,9 +109,12 @@ def main(args):
 
     with tf.name_scope('model'), tf.variable_scope('model'):
         h = white_inputs
-        num_outputs = 16
-        h = tf.contrib.layers.conv2d(h, num_outputs, [7, 7],
-                stride=(2, 2), weights_regularizer=tf.nn.l2_loss, activation_fn=None)
+        h = tf.contrib.layers.conv2d(h,
+                num_outputs,
+                [7, 7],
+                stride=(2, 2),
+                weights_regularizer=tf.nn.l2_loss,
+                activation_fn=None)
         h = tf.contrib.layers.batch_norm(h)
         h = tf.nn.relu(h)
 
