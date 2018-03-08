@@ -65,7 +65,7 @@ def main(args):
     # Part 0: Setup. #
     ##################
     beta = 250.0
-    num_outputs = 16
+    num_outputs = 64
 
     ################################
     # Part 1: Define your ConvNet. #
@@ -123,14 +123,14 @@ def main(args):
         h = tf.contrib.layers.conv2d(
             h,
             num_outputs, [3, 3],
-            stride=1,
+            stride=2,
             weights_regularizer=tf.nn.l2_loss,
             activation_fn=None)
         h = tf.contrib.layers.batch_norm(h)
         h = tf.nn.relu(h)
 
-        for downsample in range(5):
-            for resident_block in range(2):
+        for downsample in range(3):
+            for resident_block in range(3):
                 shortcut = h
 
                 h = tf.contrib.layers.conv2d(
@@ -167,7 +167,7 @@ def main(args):
 
         h = tf.contrib.layers.fully_connected(
             h,
-            num_outputs=2048,
+            num_outputs=512,
             weights_regularizer=tf.nn.l2_loss,
             activation_fn=None)
         h = tf.contrib.layers.batch_norm(h)
@@ -238,8 +238,12 @@ def main(args):
     #####################
     # Part 2: Training. #
     #####################
+    # Disable upfront allocation to avoid allocation failures
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+
     # Start a session
-    sess = tf.Session()
+    sess = tf.Session(config=config)
 
     # Create a saver object for saving and loading variables.
     saver = tf.train.Saver(max_to_keep=2)
