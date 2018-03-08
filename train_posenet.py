@@ -14,7 +14,6 @@ import sys
 import traceback
 import tensorflow as tf
 import time
-import util
 
 CROP_SIZE = 224
 
@@ -239,6 +238,9 @@ def main(args):
     # Start a session
     sess = tf.Session()
 
+    # Create a saver object for saving and loading variables.
+    saver = tf.train.Saver(max_to_keep=20)
+
     # Set up training
     sess.run(tf.global_variables_initializer())
 
@@ -279,15 +281,7 @@ def main(args):
                 }), it)
         print('[%3d] Loss: %0.3f' % (it, np.mean(loss_vals)))
 
-    #######################
-    # Part 3: Evaluation. #
-    #######################
-    # TODO(kirmani): Write evaluation code.
-
-    ######################################
-    # Part 4: Save model.. #
-    ######################################
-    util.save(LOG_DIR + 'model.tfg', session=sess)
+        saver.save(sess, LOG_DIR + '/model.ckpt', global_step=it)
 
 
 if __name__ == '__main__':
